@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beslenme Makale Takip Paneli</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #ffffff; --bg2: #f5f5f3; --bg3: #efefec;
+      --text: #1a1a18; --text2: #6b6b67; --text3: #9b9b96;
+      --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+      --info-bg: #e6f1fb; --info-text: #185fa5;
+      --warn-bg: #faeeda; --warn-text: #854f0b;
+      --success-bg: #eaf3de; --success-text: #3b6d11;
+      --danger-bg: #fcebeb; --danger-text: #a32d2d;
+      --radius: 8px; --radius-lg: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1a; --bg2: #252522; --bg3: #2e2e2b;
+        --text: #f0f0ec; --text2: #a0a09a; --text3: #6a6a64;
+        --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+        --info-bg: #042c53; --info-text: #85b7eb;
+        --warn-bg: #412402; --warn-text: #fac775;
+        --success-bg: #173404; --success-text: #97c459;
+        --danger-bg: #501313; --danger-text: #f09595;
+      }
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+    .container { max-width: 860px; margin: 0 auto; padding: 2rem 1.25rem; }
+    .header { margin-bottom: 1.75rem; }
+    .header h1 { font-size: 22px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
+    .header p { font-size: 13px; color: var(--text2); margin-top: 5px; }
+    .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.25rem; }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .controls input, .controls select {
+      font-size: 14px; font-family: inherit; height: 36px; padding: 0 12px;
+      border: 0.5px solid var(--border2); border-radius: var(--radius);
+      background: var(--bg); color: var(--text); outline: none;
+    }
+    .controls input { flex: 1; min-width: 180px; }
+    .controls input:focus, .controls select:focus { border-color: var(--info-text); }
+    .controls button {
+      height: 36px; padding: 0 16px; font-size: 13px; font-family: inherit;
+      border: 0.5px solid var(--border2); border-radius: var(--radius);
+      background: var(--bg); color: var(--text); cursor: pointer;
+    }
+    .controls button:hover { background: var(--bg2); }
+    .keywords { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .kw-label { font-size: 12px; color: var(--text2); }
+    .kw {
+      font-size: 12px; padding: 4px 12px; border-radius: 20px;
+      border: 0.5px solid var(--border); cursor: pointer;
+      color: var(--text2); background: var(--bg2); transition: all 0.15s;
+    }
+    .kw.active { background: var(--success-bg); color: var(--success-text); border-color: transparent; font-weight: 500; }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tab {
+      font-size: 12px; padding: 5px 14px; border-radius: 20px;
+      border: 0.5px solid var(--border2); cursor: pointer;
+      background: var(--bg); color: var(--text2); transition: all 0.15s;
+    }
+    .tab.active { background: var(--info-bg); color: var(--info-text); border-color: transparent; font-weight: 500; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+    .stat { background: var(--bg2); border-radius: var(--radius); padding: 12px; text-align: center; }
+    .stat .num { font-size: 24px; font-weight: 500; }
+    .stat .lbl { font-size: 12px; color: var(--text2); margin-top: 3px; }
+    .articles { display: flex; flex-direction: column; gap: 12px; }
+    .article-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; transition: border-color 0.15s; }
+    .article-card:hover { border-color: var(--border2); }
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .card-title { font-size: 14px; font-weight: 500; line-height: 1.45; flex: 1; }
+    .card-title a { color: var(--info-text); text-decoration: none; }
+    .card-title a:hover { text-decoration: underline; }
+    .badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; font-weight: 500; }
+    .badge-pubmed { background: var(--info-bg); color: var(--info-text); }
+    .badge-cochrane { background: var(--warn-bg); color: var(--warn-text); }
+    .badge-dergipark { background: var(--success-bg); color: var(--success-text); }
+    .card-meta { font-size: 12px; color: var(--text2); margin-bottom: 8px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .card-abstract { font-size: 13px; color: var(--text2); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-abstract.expanded { -webkit-line-clamp: unset; overflow: visible; }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+    .expand-btn { font-size: 12px; color: var(--info-text); cursor: pointer; background: none; border: none; padding: 0; font-family: inherit; }
+    .ext-link { font-size: 12px; color: var(--info-text); text-decoration: none; display: flex; align-items: center; gap: 4px; }
+    .ext-link:hover { text-decoration: underline; }
+    .loading, .empty, .error { text-align: center; padding: 3rem 1rem; color: var(--text2); font-size: 14px; }
+    .error { color: var(--danger-text); background: var(--danger-bg); border-radius: var(--radius-lg); }
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 1.5rem; }
+    .pagination button { font-size: 13px; padding: 0 16px; height: 34px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); cursor: pointer; font-family: inherit; }
+    .pagination button:hover:not(:disabled) { background: var(--bg2); }
+    .pagination button:disabled { opacity: 0.4; cursor: default; }
+    .pagination span { font-size: 13px; color: var(--text2); }
+    section { margin-bottom: 1.25rem; }
+    .section-title { font-size: 12px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1><i class="ti ti-notebook"></i> Beslenme Makale Takip Paneli</h1>
+    <p>PubMed · Cochrane (Europe PMC) · DergiPark — güncel akademik yayınlar</p>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Arama</div>
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="Anahtar kelime ekle..." />
+      <select id="sortSelect">
+        <option value="date">En yeni</option>
+        <option value="relevance">Alaka düzeyi</option>
+      </select>
+      <button id="searchBtn"><i class="ti ti-search"></i> Ara</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Hızlı filtre</div>
+    <div class="keywords" id="kwContainer">
+      <span class="kw-label">Konular:</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Kaynak</div>
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-src="all">Tümü</div>
+      <div class="tab" data-src="pubmed">PubMed</div>
+      <div class="tab" data-src="cochrane">Cochrane</div>
+      <div class="tab" data-src="dergipark">DergiPark (TR)</div>
+    </div>
+  </div>
+
+  <div class="stats" id="statsRow">
+    <div class="stat"><div class="num" id="statTotal">—</div><div class="lbl">Toplam sonuç</div></div>
+    <div class="stat"><div class="num" id="statPubmed">—</div><div class="lbl">PubMed</div></div>
+    <div class="stat"><div class="num" id="statCochrane">—</div><div class="lbl">Cochrane</div></div>
+    <div class="stat"><div class="num" id="statTR">—</div><div class="lbl">DergiPark</div></div>
+  </div>
+
+  <div id="articleList"><div class="empty"><i class="ti ti-search" style="font-size:32px;display:block;margin-bottom:12px;"></i>Aramak için bir konu seçin veya arama yapın</div></div>
+
+  <div class="pagination" id="paginator" style="display:none;">
+    <button id="prevBtn" disabled>← Önceki</button>
+    <span id="pageInfo"></span>
+    <button id="nextBtn">Sonraki →</button>
+  </div>
+
+</div>
+<script>
+const KEYWORDS = [
+  { en: 'nutrition', tr: 'Beslenme' },
+  { en: 'dietary fiber', tr: 'Diyet lifi' },
+  { en: 'obesity', tr: 'Obezite' },
+  { en: 'microbiome', tr: 'Mikrobiyom' },
+  { en: 'resistant starch', tr: 'Dirençli nişasta' },
+  { en: 'metabolic syndrome', tr: 'Metabolik sendrom' },
+];
+let activeKeywords = new Set(['nutrition']);
+let activeSource = 'all';
+let allArticles = [];
+let filteredArticles = [];
+let currentPage = 1;
+const PER_PAGE = 8;
+
+const kwContainer = document.getElementById('kwContainer');
+KEYWORDS.forEach(kw => {
+  const el = document.createElement('span');
+  el.className = 'kw' + (activeKeywords.has(kw.en) ? ' active' : '');
+  el.textContent = kw.tr;
+  el.dataset.en = kw.en;
+  el.onclick = () => { activeKeywords.has(kw.en) ? activeKeywords.delete(kw.en) : activeKeywords.add(kw.en); el.classList.toggle('active'); };
+  kwContainer.appendChild(el);
+});
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); activeSource = tab.dataset.src; applyFilter(); };
+});
+document.getElementById('searchBtn').onclick = fetchAll;
+document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') fetchAll(); });
+
+async function fetchPubMed(query) {
+  try {
+    const sr = await fetch(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(query+'[Title/Abstract]')}&retmax=20&sort=pub+date&retmode=json`);
+    const sd = await sr.json();
+    const ids = sd.esearchresult?.idlist || [];
+    if (!ids.length) return [];
+    const fr = await fetch(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${ids.join(',')}&retmode=xml`);
+    const xml = await fr.text();
+    const doc = new DOMParser().parseFromString(xml, 'text/xml');
+    return Array.from(doc.querySelectorAll('PubmedArticle')).map(a => ({
+      source: 'pubmed',
+      title: a.querySelector('ArticleTitle')?.textContent || 'Başlık yok',
+      abstract: a.querySelector('AbstractText')?.textContent || '',
+      url: `https://pubmed.ncbi.nlm.nih.gov/${a.querySelector('PMID')?.textContent}/`,
+      journal: a.querySelector('Title')?.textContent || '',
+      year: a.querySelector('PubDate Year')?.textContent || '',
+      authors: Array.from(a.querySelectorAll('Author')).slice(0,3).map(au => { const l=au.querySelector('LastName')?.textContent||''; const f=au.querySelector('ForeName')?.textContent||''; return f?`${l} ${f[0]}.`:l; }).join(', '),
+    }));
+  } catch(e) { return []; }
+}
+
+async function fetchEuropePMC(query) {
+  try {
+    const r = await fetch(`https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${encodeURIComponent(query+' AND (SRC:CRS OR SRC:CTX)')}&format=json&pageSize=10&sort=P_PDATE_D%20desc`);
+    const d = await r.json();
+    return (d.resultList?.result||[]).filter(x=>x.source==='CRS'||x.source==='CTX'||(x.journalTitle||'').toLowerCase().includes('cochrane')).map(x=>({
+      source:'cochrane', title:x.title||'Başlık yok', abstract:x.abstractText||'',
+      url: x.doi?`https://doi.org/${x.doi}`:`https://europepmc.org/article/${x.source}/${x.id}`,
+      journal:x.journalTitle||'Cochrane', year:x.pubYear||'', authors:x.authorString?.split(',').slice(0,3).join(', ')||'',
+    }));
+  } catch(e) { return []; }
+}
+
+async function fetchDergiPark(query) {
+  const map = {'nutrition':'beslenme','dietary fiber':'diyet lifi','obesity':'obezite','microbiome':'mikrobiyom','resistant starch':'dirençli nişasta','metabolic syndrome':'metabolik sendrom'};
+  const trQ = map[query.toLowerCase()] || query;
+  return [{
+    source:'dergipark', title:`DergiPark: "${trQ}" araması`,
+    abstract:`DergiPark'ta "${trQ}" anahtar kelimesiyle yayınlanmış Türkçe akademik makalelere ulaşmak için tıklayın. TÜBİTAK ULAKBİM bünyesindeki tüm Türkçe dergiler taranır.`,
+    url:`https://dergipark.org.tr/tr/search?q=${encodeURIComponent(trQ)}&section=article`,
+    journal:'DergiPark (TÜBİTAK ULAKBİM)', year:'2025', authors:'Türkçe kaynaklar',
+  }];
+}
+
+async function fetchAll() {
+  const extra = document.getElementById('searchInput').value.trim();
+  const kws = [...activeKeywords];
+  if (extra) kws.push(extra);
+  if (!kws.length) kws.push('nutrition');
+  const query = kws.join(' OR ');
+  document.getElementById('articleList').innerHTML = '<div class="loading"><i class="ti ti-loader" style="font-size:28px;display:block;margin-bottom:10px;"></i>Makaleler yükleniyor...</div>';
+  document.getElementById('paginator').style.display = 'none';
+  ['statTotal','statPubmed','statCochrane','statTR'].forEach(id => document.getElementById(id).textContent = '…');
+  const [pm, co, dg] = await Promise.all([fetchPubMed(query), fetchEuropePMC(query), fetchDergiPark(kws[0]||'beslenme')]);
+  allArticles = [...pm, ...co, ...dg];
+  document.getElementById('statPubmed').textContent = pm.length;
+  document.getElementById('statCochrane').textContent = co.length;
+  document.getElementById('statTR').textContent = dg.length;
+  applyFilter();
+}
+
+function applyFilter() {
+  filteredArticles = activeSource==='all' ? allArticles : allArticles.filter(a=>a.source===activeSource);
+  document.getElementById('statTotal').textContent = filteredArticles.length;
+  currentPage = 1;
+  renderPage();
+}
+
+function renderPage() {
+  const list = document.getElementById('articleList');
+  const paginator = document.getElementById('paginator');
+  if (!filteredArticles.length) { list.innerHTML='<div class="empty"><i class="ti ti-mood-empty" style="font-size:32px;display:block;margin-bottom:12px;"></i>Sonuç bulunamadı</div>'; paginator.style.display='none'; return; }
+  const totalPages = Math.ceil(filteredArticles.length/PER_PAGE);
+  const slice = filteredArticles.slice((currentPage-1)*PER_PAGE, currentPage*PER_PAGE);
+  const container = document.createElement('div');
+  container.className = 'articles';
+  slice.forEach((art, idx) => {
+    const card = document.createElement('div');
+    card.className = 'article-card';
+    const absId = `abs-${(currentPage-1)*PER_PAGE+idx}`;
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="card-title"><a href="${art.url}" target="_blank" rel="noopener">${art.title}</a></div>
+        <span class="badge badge-${art.source}">${art.source==='pubmed'?'PubMed':art.source==='cochrane'?'Cochrane':'DergiPark'}</span>
+      </div>
+      <div class="card-meta">
+        ${art.authors?`<span><i class="ti ti-user" style="font-size:12px;vertical-align:-1px;margin-right:3px;"></i>${art.authors}</span>`:''}
+        ${art.journal?`<span><i class="ti ti-book" style="font-size:12px;vertical-align:-1px;margin-right:3px;"></i>${art.journal}</span>`:''}
+        ${art.year?`<span><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px;margin-right:3px;"></i>${art.year}</span>`:''}
+      </div>
+      ${art.abstract?`<div class="card-abstract" id="${absId}">${art.abstract}</div>`:''}
+      <div class="card-footer">
+        ${art.abstract&&art.abstract.length>300?`<button class="expand-btn" onclick="toggleAbs('${absId}',this)">Tamamını gör ↓</button>`:'<span></span>'}
+        <a href="${art.url}" target="_blank" rel="noopener" class="ext-link"><i class="ti ti-external-link" style="font-size:12px;"></i>Makaleye git</a>
+      </div>`;
+    container.appendChild(card);
+  });
+  list.innerHTML = '';
+  list.appendChild(container);
+  if (totalPages>1) { paginator.style.display='flex'; document.getElementById('pageInfo').textContent=`${currentPage} / ${totalPages}`; document.getElementById('prevBtn').disabled=currentPage===1; document.getElementById('nextBtn').disabled=currentPage===totalPages; }
+  else paginator.style.display='none';
+}
+
+function toggleAbs(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  btn.textContent = el.classList.toggle('expanded') ? 'Kapat ↑' : 'Tamamını gör ↓';
+}
+
+document.getElementById('prevBtn').onclick = () => { if(currentPage>1){currentPage--;renderPage();} };
+document.getElementById('nextBtn').onclick = () => { currentPage++;renderPage(); };
+
+fetchAll();
+</script>
+</body>
+</html>
